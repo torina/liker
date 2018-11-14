@@ -16,7 +16,7 @@ import java.util.Optional;
 public class Hashtagee {
 
     private static String LIMIT_LIKES = "100";
-    private static int LIMIT_LIKES_INT = 100;
+    private static int LIMIT_LIKES_INT = 1000;
 
     Optional<InstagramFeedResult> getTagFeed(Instagram4j instagram, String hashtag) {
         try {
@@ -27,13 +27,15 @@ public class Hashtagee {
         return Optional.empty();
     }
 
-    void likeAllByHashtag(Instagram4j account, String hashTag) {
+    void likeAllByHashtag(Instagram4j account, String hashTag, int numLikes) {
+        int finalLikeAmount = numLikes < LIMIT_LIKES_INT? numLikes : LIMIT_LIKES_INT;
+
         Optional<InstagramFeedResult> res = getTagFeed(account, hashTag);
         int i = 0;
         if(res.isPresent()) {
             for(InstagramFeedItem item: res.get().getItems()){
 
-                if(!item.has_liked && i++ < LIMIT_LIKES_INT) {
+                if(!item.has_liked && i++ < finalLikeAmount) {
                     try {
                         account.sendRequest(new InstagramLikeRequest(item.pk));
                     } catch (IOException e) {

@@ -30,11 +30,12 @@ public class Controller {
     }
 
     @GetMapping("likeAll")
-    public ResponseEntity<InstagramFeedResult> likeAllFeed(@RequestParam("u") String user, @RequestParam("p")String pass, @RequestParam("h")String hashTag) {
+    public ResponseEntity<InstagramFeedResult> likeAllFeed(@RequestParam("u") String user, @RequestParam("p")String pass, @RequestParam("h")String hashTag,
+                                                           @RequestParam("a")Integer amount) {
         Instagram4j acc = Login.getAccount(user, pass);
 
         try {
-            hashtagee.likeAllByHashtag(acc, hashTag);
+            hashtagee.likeAllByHashtag(acc, hashTag, amount);
         } catch (RuntimeException e) {
             e.printStackTrace();
             ResponseEntity.ok("Operation not performed");
