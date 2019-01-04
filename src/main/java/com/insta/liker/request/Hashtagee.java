@@ -1,4 +1,4 @@
-package com.insta.liker;
+package com.insta.liker.request;
 
 import lombok.extern.log4j.Log4j;
 import org.brunocvcunha.instagram4j.Instagram4j;
@@ -15,27 +15,26 @@ import java.util.Optional;
 @Log4j
 public class Hashtagee {
 
-    private static String LIMIT_LIKES = "100";
     private static int LIMIT_LIKES_INT = 1000;
 
-    Optional<InstagramFeedResult> getTagFeed(Instagram4j instagram, String hashtag) {
+    public Optional<InstagramFeedResult> getTagFeed(Instagram4j instagram, String hashtag) {
         try {
-             return Optional.of(instagram.sendRequest(new InstagramTagFeedRequest(hashtag)));
+            return Optional.of(instagram.sendRequest(new InstagramTagFeedRequest(hashtag)));
         } catch (IOException e) {
             e.printStackTrace();
         }
         return Optional.empty();
     }
 
-    void likeAllByHashtag(Instagram4j account, String hashTag, int numLikes) {
-        int finalLikeAmount = numLikes < LIMIT_LIKES_INT? numLikes : LIMIT_LIKES_INT;
+    public void likeAllByHashtag(Instagram4j account, String hashTag, int numLikes) {
+        int finalLikeAmount = numLikes < LIMIT_LIKES_INT ? numLikes : LIMIT_LIKES_INT;
 
         Optional<InstagramFeedResult> res = getTagFeed(account, hashTag);
         int i = 0;
-        if(res.isPresent()) {
-            for(InstagramFeedItem item: res.get().getItems()){
+        if (res.isPresent()) {
+            for (InstagramFeedItem item : res.get().getItems()) {
 
-                if(!item.has_liked && i++ < finalLikeAmount) {
+                if (!item.has_liked && i++ < finalLikeAmount) {
                     try {
                         account.sendRequest(new InstagramLikeRequest(item.pk));
                     } catch (IOException e) {

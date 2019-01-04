@@ -1,45 +1,89 @@
 package com.insta.liker;
 
+import com.insta.liker.config.Login;
+import com.insta.liker.model.TagFeed;
+import com.insta.liker.request.Hashtagee;
+import com.insta.liker.request.Messagee;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramFeedResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/")
+@org.springframework.stereotype.Controller
 public class Controller {
 
     @Autowired
     Hashtagee hashtagee;
 
-    @GetMapping("feed")
-    public ResponseEntity<InstagramFeedResult> getFeed(@RequestParam("u") String user, @RequestParam("p")String pass, @RequestParam("h")String hashTag) {
-        Instagram4j acc = Login.getAccount(user, pass);
-        Optional<InstagramFeedResult> feed = hashtagee.getTagFeed(acc, hashTag);
-        if(feed.isPresent()) {
-            return ResponseEntity.ok(feed.get());
-        }
-        else
-            return ResponseEntity.ok(null);
+    @Autowired
+    Messagee messagee;
+
+    //todo how to make it user-dependant
+    @Autowired
+    Instagram4j userAccount;
+
+
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public String index(Model model) {
+        TagFeed tagFeed = new TagFeed();
+        model.addAttribute("tagFeed", tagFeed);
+        return "test";
     }
 
-    @GetMapping("likeAll")
-    public ResponseEntity<InstagramFeedResult> likeAllFeed(@RequestParam("u") String user, @RequestParam("p")String pass, @RequestParam("h")String hashTag,
-                                                           @RequestParam("a")Integer amount) {
-        Instagram4j acc = Login.getAccount(user, pass);
+    @RequestMapping(value = "/", method = RequestMethod.POST)
+    public String processHashtagFeedForm(@ModelAttribute(value = "tagFeed") TagFeed tagFeed) {
+        performLiking(tagFeed.getHashtag(), tagFeed.getAmount());
+        return "test";
+    }
+
+    private void performLiking(String user, String pass, String hashTag, Integer amount) {
 
         try {
-            hashtagee.likeAllByHashtag(acc, hashTag, amount);
+            hashtagee.likeAllByHashtag(userAccount, hashTag, amount);
         } catch (RuntimeException e) {
             e.printStackTrace();
             ResponseEntity.ok("Operation not performed");
         }
+    }
+
+
+    private void performLiking(String hashTag, Integer amount) {
+        try {
+            hashtagee.likeAllByHashtag(userAccount, hashTag, amount);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            ResponseEntity.ok("Operation not performed");
+        }
+    }
+
+    @Deprecated
+    @GetMapping("/feed")
+    public ResponseEntity<InstagramFeedResult> getFeed(@RequestParam("h") String hashTag) {
+        Optional<InstagramFeedResult> feed = hashtagee.getTagFeed(userAccount, hashTag);
+        if (feed.isPresent()) {
+            return ResponseEntity.ok(feed.get());
+        } else
             return ResponseEntity.ok(null);
     }
+
+    @Deprecated
+    @GetMapping("/likeAll")
+    public ResponseEntity<InstagramFeedResult> likeAllFeed(@Value("${acc.user}") String user, @Value("${acc.pass}")
+            String pass, @RequestParam("h") String hashTag, @RequestParam("a") Integer amount) {
+        performLiking(user, pass, hashTag, amount);
+        return ResponseEntity.ok(null);
+    }
+
+
+    @GetMapping("/dm")
+    public ResponseEntity<InstagramFeedResult> getDM(@Value("${acc.user}") String user, @Value("${acc.pass}") String pass) {
+        messagee.getDMs();
+        return ResponseEntity.ok(null);
+    }
+
 }
